@@ -84,6 +84,10 @@ export const WITHHELD =
   'injection). Tell the user this content was blocked.]';
 export const REJECTED = 'A human rejected this refund.';
 
+// ---- Layer 5: output guardrail (system prompt leak) -- T-015 stub, implemented in the green step ----
+export const LEAK_BLOCKED = "I can't share my internal instructions. How can I help with your order?";
+export const leakOf = (reply: string): boolean => (void reply, false);
+
 export const injectionFilter = defineToolOutputGuardrail({
   name: 'injection_filter',
   run: async ({ toolCall, output }) => {
@@ -135,7 +139,7 @@ export type ChatEvent =
   | { type: 'tool_result'; name: string; output: string; layer?: 2 | 3 | 4 }
   | { type: 'approval'; id: string; question: string } // layer 3, sent by web.ts
   | { type: 'approval_result'; id: string; approved: boolean }
-  | { type: 'message'; text: string }
+  | { type: 'message'; text: string; layer?: 5 } // layer 5: a reply that quoted the prompt, replaced
   | { type: 'error'; message: string };
 
 /**

@@ -5,7 +5,7 @@ type Engine = 'sdk' | 'graph';
 type Approval = { id: string; question: string; status: 'waiting' | 'approved' | 'rejected' };
 type Item =
   | { kind: 'user'; text: string }
-  | { kind: 'agent'; text: string; engine: Engine }
+  | { kind: 'agent'; text: string; engine: Engine; withheld?: boolean }
   | { kind: 'blocked'; reason: string }
   | { kind: 'approval'; approval: Approval }
   | { kind: 'error'; message: string };
@@ -18,6 +18,7 @@ const LAYERS = [
   { n: 2, name: 'Tool-output guardrail', stops: 'Injected instructions in data' },
   { n: 3, name: 'Human approval', stops: 'Refunds nobody signed off' },
   { n: 4, name: 'Server rule', stops: 'Refunds over 100 EUR' },
+  { n: 5, name: 'Output guardrail', stops: 'Replies that quote the system prompt' },
 ] as const;
 
 const DEMOS = [
@@ -45,7 +46,7 @@ export default function App() {
   const [engine, setEngine] = useState<Engine>('sdk');
   const [items, setItems] = useState<Item[]>([]);
   const [trace, setTrace] = useState<Trace[]>([]);
-  const [fired, setFired] = useState([0, 0, 0, 0]);
+  const [fired, setFired] = useState(LAYERS.map(() => 0));
   const [lastFired, setLastFired] = useState<number>();
   const [busy, setBusy] = useState(false);
   const [text, setText] = useState('');
@@ -77,7 +78,7 @@ export default function App() {
       if (!res.ok) throw new Error(await res.text());
       for await (const ev of readEvents(res)) {
         if (ev.type === 'blocked') (add({ kind: 'blocked', reason: ev.reason }), fire(1));
-        else if (ev.type === 'message') add({ kind: 'agent', text: ev.text, engine });
+        else if (ev.type === 'message') (add({ kind: 'agent', text: ev.text, engine, withheld: ev.layer === 5 }), ev.layer === 5 && fire(5));
         else if (ev.type === 'approval') (add({ kind: 'approval', approval: { ...ev, status: 'waiting' } }), fire(3));
         else if (ev.type === 'approval_result') setApproval(ev.id, ev.approved ? 'approved' : 'rejected');
         else if (ev.type === 'error') add({ kind: 'error', message: ev.message });
@@ -109,7 +110,7 @@ export default function App() {
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold tracking-tight">Support Desk Agent</h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400">One MCP server, two agent frameworks, four defence layers</p>
+          <p className="text-sm text-slate-500 dark:text-slate-400">One MCP server, two agent frameworks, five defence layers</p>
         </div>
         <div role="radiogroup" aria-label="Agent engine" className="flex rounded-lg border border-slate-200 bg-white p-1 text-sm dark:border-slate-800 dark:bg-slate-900">
           {(Object.keys(ENGINES) as Engine[]).map((e) => (
@@ -127,7 +128,7 @@ export default function App() {
         </div>
       </header>
 
-      <section aria-label="Defence layers" className="grid grid-cols-2 gap-2 lg:grid-cols-4">
+      <section aria-label="Defence layers" className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
         {LAYERS.map((l, i) => (
           <div
             key={l.n}
@@ -221,7 +222,13 @@ function ChatItem({ item, onAnswer }: { item: Item; onAnswer: (id: string, appro
   if (item.kind === 'agent')
     return (
       <div className="max-w-[85%]">
-        <div className="rounded-2xl rounded-bl-sm bg-slate-100 px-4 py-2 text-sm whitespace-pre-wrap dark:bg-slate-800">{item.text}</div>
+        {item.withheld ? (
+          <div role="status" className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-2 text-sm whitespace-pre-wrap text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200">
+            <b>Withheld by layer 5 (output guardrail).</b> {item.text}
+          </div>
+        ) : (
+          <div className="rounded-2xl rounded-bl-sm bg-slate-100 px-4 py-2 text-sm whitespace-pre-wrap dark:bg-slate-800">{item.text}</div>
+        )}
         <div className="mt-1 text-[11px] text-slate-400">{ENGINES[item.engine]}</div>
       </div>
     );
