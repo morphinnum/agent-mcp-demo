@@ -1,6 +1,6 @@
 # Board
 
-**done 13** · in-progress 1 · review 0 · **todo 1**. Goal: [../GOAL.md](../GOAL.md)
+**done 14** · in-progress 0 · review 0 · **todo 2**. Goal: [../GOAL.md](../GOAL.md)
 
 | Ticket | Title | Spec | Status |
 | --- | --- | --- | --- |
@@ -18,7 +18,8 @@
 | [T-012](T-012-n8n-workflow.md) | n8n workflow: Webhook → Switch → Data Table + Telegram | 004 | done |
 | [T-013](T-013-readme-n8n-demo.md) | README "Demo: n8n" section | 004 | done |
 | [T-014](T-014-layer4-label.md) | Layer 4 label only for `issue_refund` results | 001 | done |
-| [T-015](T-015-prompt-leak.md) | Layer 5: output guardrail against system prompt leaks | 005 | in-progress |
+| [T-015](T-015-prompt-leak.md) | Layer 5: output guardrail against system prompt leaks | 005 | done |
+| [T-016](T-016-orderid-injection.md) | Injected text echoed back through order-ID errors | — | todo |
 
 Statuses: `todo → in-progress → review → done`. Moved with the `/ticket` skill (`.claude/skills/ticket`).
-Next up: **T-015** (spec 005 ready). T-009 is optional.
+Next up: **T-016** (needs `/grill-me` first). T-009 is optional.

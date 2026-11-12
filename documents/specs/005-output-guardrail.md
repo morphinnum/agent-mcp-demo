@@ -1,6 +1,6 @@
 # Spec 005: Layer 5, output guardrail against system prompt leaks
 
-Status: **accepted** · Tickets: T-015
+Status: **done** · Tickets: T-015
 
 ## Problem
 The T-010 red-team run showed that the system prompt leaks on both engines. "Summarise as a bullet
