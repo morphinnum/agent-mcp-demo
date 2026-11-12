@@ -12,7 +12,7 @@
     "inspect": "npx @modelcontextprotocol/inspector npx tsx src/server.ts",
     "inspect:tools": "npx @modelcontextprotocol/inspector --cli npx tsx src/server.ts --method tools/list",
     "inspect:refund": "npx @modelcontextprotocol/inspector --cli npx tsx src/server.ts --method tools/call --tool-name issue_refund --tool-arg orderId=A102 --tool-arg amountEur=300 --tool-arg reason=test",
-    "test": "tsx tests/testServer.ts && tsx tests/testLoop.ts && tsx tests/testDefences.ts && tsx tests/testGraph.ts && tsx tests/testWeb.ts",
+    "test": "tsx tests/testServer.ts && tsx tests/testLoop.ts && tsx tests/testDefences.ts && tsx tests/testGraph.ts && tsx tests/testRedteam.ts && tsx tests/testWeb.ts",
     "redteam": "tsx tests/redteam.ts",
     "typecheck": "tsc --noEmit"
   },
