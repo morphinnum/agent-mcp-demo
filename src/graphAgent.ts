@@ -103,7 +103,8 @@ export async function* runGraphTurn(graph: Graph, threadId: string, text: string
       }
       for (const msg of update.tools?.messages ?? []) {
         const output = textOf(msg.content);
-        yield { type: 'tool_result', name: msg.name ?? 'tool', output, layer: layerOf(output) };
+        const name = msg.name ?? 'tool';
+        yield { type: 'tool_result', name, output, layer: layerOf(output, name) };
       }
     }
     if (question === undefined) return;

@@ -138,11 +138,14 @@ export type ChatEvent =
   | { type: 'message'; text: string }
   | { type: 'error'; message: string };
 
-/** Which defence layer, if any, shaped this tool result. Both engines use it. */
-export const layerOf = (output: string): 2 | 3 | 4 | undefined =>
+/**
+ * Which defence layer, if any, shaped this tool result. Both engines use it. Layer 4 is only an
+ * issue_refund refusal: the refund-policy KB article contains the same words (T-014).
+ */
+export const layerOf = (output: string, tool: string): 2 | 3 | 4 | undefined =>
   output.includes('Tool result withheld') ? 2
   : output.includes(REJECTED) ? 3
-  : /need a human manager/.test(output) ? 4 // the server's own refusal text (server.ts)
+  : tool === 'issue_refund' && /need a human manager/.test(output) ? 4 // the server's own refusal text (server.ts)
   : undefined;
 
 export type Engine = {
@@ -179,7 +182,7 @@ export async function createSdkEngine(model?: string | Model): Promise<Engine> {
           } else if (item instanceof RunToolCallOutputItem) {
             const output = textOf(item.output);
             const name = 'name' in item.rawItem ? String(item.rawItem.name) : 'tool';
-            yield { type: 'tool_result', name, output, layer: layerOf(output) };
+            yield { type: 'tool_result', name, output, layer: layerOf(output, name) };
           }
         }
         history = result.history;

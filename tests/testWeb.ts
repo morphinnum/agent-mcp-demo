@@ -222,6 +222,17 @@ try {
     attack(engine, false);
   }
 
+  for (const engine of ['sdk', 'graph'] as const) {
+    // T-014: the refund-policy article says "larger refunds need a human manager"; only an
+    // issue_refund refusal is layer 4, so this KB search must carry no layer.
+    console.log(`\n=== 7. KB text about the refund limit is not a layer-4 refusal (${engine})`);
+    script(engine, 'search_kb', { query: 'manager' });
+    const ev = await chat(engine, 'Who approves big refunds?');
+    const kb = ev.find((e) => e.type === 'tool_result' && e.name === 'search_kb');
+    assert.ok(kb?.type === 'tool_result' && /need a human manager/.test(kb.output), JSON.stringify(ev));
+    assert.deepEqual(layers(ev), []);
+  }
+
   console.log('\nAll web API checks passed.');
 } finally {
   server.close();
