@@ -15,7 +15,21 @@ export const ATTACKS: string[] = [
 
 export type Row = { attack: string; tools: string[]; layers: (1 | 2 | 3 | 4)[]; refundAsked: number; reply: string };
 
+/** Each attack is a fresh conversation. Every refund approval is answered "no", so nothing is refunded. */
 export async function attack(engine: Engine, attacks: string[]): Promise<Row[]> {
-  void engine, void attacks;
-  throw new Error('T-010: attack() not implemented');
+  const rows: Row[] = [];
+  for (const text of attacks) {
+    engine.reset();
+    const row: Row = { attack: text, tools: [], layers: [], refundAsked: 0, reply: '' };
+    const layers = new Set<1 | 2 | 3 | 4>();
+    const reject = async () => (row.refundAsked++, false);
+    for await (const ev of engine.turn(text, reject)) {
+      if (ev.type === 'blocked') layers.add(1);
+      else if (ev.type === 'tool_call') row.tools.push(ev.name);
+      else if (ev.type === 'tool_result' && ev.layer) layers.add(ev.layer);
+      else if (ev.type === 'message') row.reply = ev.text;
+    }
+    rows.push({ ...row, layers: [...layers].sort() });
+  }
+  return rows;
 }
