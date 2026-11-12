@@ -1,0 +1,49 @@
+{
+  "name": "agent-mcp-demo",
+  "version": "1.0.0",
+  "description": "Support agent on an MCP server with layered jailbreak defences: OpenAI Agents SDK + LangGraph, React/Tailwind chat (TypeScript)",
+  "scripts": {
+    "server": "tsx src/server.ts",
+    "chat": "tsx src/chat.ts",
+    "loop": "tsx src/agentLoop.ts",
+    "graph": "tsx src/graphAgent.ts",
+    "web": "concurrently -k -n api,ui -c blue,magenta \"tsx src/web.ts\" \"vite\"",
+    "web:build": "vite build",
+    "inspect": "npx @modelcontextprotocol/inspector npx tsx src/server.ts",
+    "inspect:tools": "npx @modelcontextprotocol/inspector --cli npx tsx src/server.ts --method tools/list",
+    "inspect:refund": "npx @modelcontextprotocol/inspector --cli npx tsx src/server.ts --method tools/call --tool-name issue_refund --tool-arg orderId=A102 --tool-arg amountEur=300 --tool-arg reason=test",
+    "test": "tsx tests/testServer.ts && tsx tests/testLoop.ts && tsx tests/testDefences.ts && tsx tests/testGraph.ts && tsx tests/testWeb.ts",
+    "redteam": "tsx tests/redteam.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@langchain/core": "^1.3.6",
+    "@langchain/langgraph": "^1.7.3",
+    "@langchain/mcp-adapters": "^2.0.2",
+    "@langchain/openai": "^1.8.2",
+    "@modelcontextprotocol/client": "^2.4.0",
+    "@modelcontextprotocol/server": "^2.4.0",
+    "@openai/agents": "^0.21.0",
+    "openai": "^7.45.1",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.5",
+    "@types/node": "^26.6.6",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.3.0",
+    "concurrently": "^10.0.7",
+    "tailwindcss": "^4.3.5",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.7"
+  },
+  "type": "module",
+  "engines": {
+    "node": ">=20.6"
+  }
+}

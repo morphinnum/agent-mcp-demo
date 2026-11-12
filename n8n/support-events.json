@@ -1,0 +1,145 @@
+{
+  "name": "Support desk: refund and defence events",
+  "nodes": [
+    {
+      "id": "6f1c2a10-0001-4a8e-9b1a-000000000001",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [0, 200],
+      "webhookId": "6f1c2a10-0001-4a8e-9b1a-0000000000aa",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "support-events",
+        "options": {}
+      }
+    },
+    {
+      "id": "6f1c2a10-0002-4a8e-9b1a-000000000002",
+      "name": "Log to Data Table",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [260, 40],
+      "parameters": {
+        "resource": "row",
+        "operation": "insert",
+        "dataTableId": { "__rl": true, "mode": "name", "value": "support_events" },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "kind": "={{ $json.body.kind }}",
+            "layer": "={{ $json.body.layer == null ? '' : String($json.body.layer) }}",
+            "engine": "={{ $json.body.engine }}",
+            "tool": "={{ $json.body.tool || '' }}",
+            "orderId": "={{ ($json.body.args || {}).orderId || '' }}",
+            "amountEur": "={{ String(($json.body.args || {}).amountEur ?? '') }}",
+            "detail": "={{ $json.body.detail }}",
+            "at": "={{ $json.body.at }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            { "id": "kind", "displayName": "kind", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "layer", "displayName": "layer", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "engine", "displayName": "engine", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "tool", "displayName": "tool", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "orderId", "displayName": "orderId", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "amountEur", "displayName": "amountEur", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "detail", "displayName": "detail", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true },
+            { "id": "at", "displayName": "at", "required": false, "defaultMatch": false, "display": true, "type": "string", "canBeUsedToMatch": true }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "6f1c2a10-0003-4a8e-9b1a-000000000003",
+      "name": "Route by kind",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [260, 320],
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 3 },
+                "conditions": [
+                  {
+                    "id": "6f1c2a10-0003-4a8e-9b1a-0000000000c1",
+                    "leftValue": "={{ $json.body.kind }}",
+                    "rightValue": "refund",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "refund"
+            },
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 3 },
+                "conditions": [
+                  {
+                    "id": "6f1c2a10-0003-4a8e-9b1a-0000000000c2",
+                    "leftValue": "={{ $json.body.kind }}",
+                    "rightValue": "defence",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "defence"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "6f1c2a10-0004-4a8e-9b1a-000000000004",
+      "name": "Telegram: refund issued",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [540, 220],
+      "notes": "HTML parse mode with every model/user-influenced value escaped (& < >). The node can't send plain text: without a parse mode it falls back to Markdown, which can't be escaped reliably.",
+      "parameters": {
+        "chatId": "YOUR_CHAT_ID",
+        "text": "=💸 <b>Refund issued</b> ({{ $json.body.engine }})\nOrder {{ String(($json.body.args || {}).orderId ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;') }}: {{ String(($json.body.args || {}).amountEur ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;') }} EUR\nReason: {{ String(($json.body.args || {}).reason ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;') }}",
+        "additionalFields": { "appendAttribution": false, "parse_mode": "HTML" }
+      }
+    },
+    {
+      "id": "6f1c2a10-0005-4a8e-9b1a-000000000005",
+      "name": "Telegram: security alert",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [540, 420],
+      "notes": "HTML parse mode with every model/user-influenced value escaped (& < >). See the refund node's note.",
+      "parameters": {
+        "chatId": "YOUR_CHAT_ID",
+        "text": "=🛡 <b>Defence layer {{ $json.body.layer }}</b> ({{ $json.body.engine }}): {{ ({1: 'jailbreak blocked', 2: 'prompt injection withheld', 3: 'refund rejected by a human', 4: 'refund over the 100 EUR limit'})[$json.body.layer] || 'fired' }}\nTool: {{ String($json.body.tool || '-').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;') }}{{ ($json.body.args || {}).orderId ? ', order ' + String($json.body.args.orderId).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;') : '' }}\n{{ String($json.body.detail ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;') }}",
+        "additionalFields": { "appendAttribution": false, "parse_mode": "HTML" }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          { "node": "Log to Data Table", "type": "main", "index": 0 },
+          { "node": "Route by kind", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Route by kind": {
+      "main": [
+        [{ "node": "Telegram: refund issued", "type": "main", "index": 0 }],
+        [{ "node": "Telegram: security alert", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": { "executionOrder": "v1" },
+  "pinData": {}
+}
