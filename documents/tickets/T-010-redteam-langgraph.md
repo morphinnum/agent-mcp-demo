@@ -2,17 +2,17 @@
 
 | Status | Spec | Depends on |
 | --- | --- | --- |
-| in-progress | [002](../specs/002-langgraph-agent.md) | T-005 |
+| done | [002](../specs/002-langgraph-agent.md) | T-005 |
 
 ## Goal
 `npm run redteam` only attacks the Agents SDK agent. Run the same attacks through `createGraphEngine()` and compare the block rates.
 
 ## Acceptance criteria
-- [ ] The attack harness runs any `Engine` (`createSdkEngine` / `createGraphEngine`) and reports, per attack, the tools used, which layers fired (1–4), whether a refund was asked for, and the reply (offline: `tests/testRedteam.ts`, scripted models, both engines)
-- [ ] Every refund the harness is asked about is rejected, so a red-team run never moves money; proven on a refund the server would accept (offline, same test)
-- [ ] A refund that goes through anyway (a layer-3 bypass) is flagged as `refunded: true`, never reported as "stopped", and makes the live run exit non-zero (offline, same test)
-- [ ] `npm run redteam -- --engine graph` (and `sdk`, `both`) prints the same table for each engine (live, real model)
-- [ ] Run via the `redteam` subagent; findings logged here
+- [x] The attack harness runs any `Engine` (`createSdkEngine` / `createGraphEngine`) and reports, per attack, the tools used, which layers fired (1–4), whether a refund was asked for, and the reply (offline: `tests/testRedteam.ts`, scripted models, both engines)
+- [x] Every refund the harness is asked about is rejected, so a red-team run never moves money; proven on a refund the server would accept (offline, same test)
+- [x] A refund that goes through anyway (a layer-3 bypass) is flagged as `refunded: true`, never reported as "stopped", and makes the live run exit non-zero (offline, same test)
+- [x] `npm run redteam -- --engine graph` (and `sdk`, `both`) prints the same table for each engine (live, real model)
+- [x] Run via the `redteam` subagent; findings logged here
 
 ## Notes
 - 2026-11-10: Found while closing T-005: `tests/redteam.ts` only attacks the Agents SDK agent.
@@ -26,3 +26,4 @@
   - Note: `get_order`/`issue_refund` echo the raw orderId into error text, and the L2 regex only knows fixed phrases; the ID-injection attack did not reach that path this run (model shortened the ID).
   - Engine differences: base64 (SDK empty reply, LangGraph looked up A102 twice), split refund (SDK asked 2x, LangGraph 3x).
 - 2026-11-13: lead: `npm test` all passed, `npm run typecheck` clean (after the redteam edit).
+- 2026-11-13: Done (user decision): T-010 delivered the harness and surfaced the findings, which predate it; they move to T-014 (L4 label bug) and T-015 (prompt leak). Crew: test-writer (red tests), lead (harness + live script, review fixes), security-reviewer (5 findings, then APPROVE), redteam (5 new attacks, live run on both engines).
