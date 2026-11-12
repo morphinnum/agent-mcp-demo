@@ -5,7 +5,7 @@
  */
 import * as readline from 'node:readline/promises';
 import { InputGuardrailTripwireTriggered, run, user, type AgentInputItem } from '@openai/agents';
-import { createSupportAgent, createSupportDesk } from './agent.ts';
+import { createSupportAgent, createSupportDesk, replyEvent } from './agent.ts';
 import { useConfiguredLLM } from './llm.ts';
 
 await useConfiguredLLM();
@@ -27,7 +27,8 @@ try {
     if (!text || ['exit', 'quit'].includes(text.toLowerCase())) break;
     try {
       const result = await run(agent, [...history, user(text)], { maxTurns: 10 });
-      console.log(`agent> ${result.finalOutput}`);
+      const reply = replyEvent(String(result.finalOutput ?? '')) as { text: string; layer?: 5 }; // layer 5
+      console.log(`agent> ${reply.text}${reply.layer ? '   [withheld by layer 5: output guardrail]' : ''}`);
       history = result.history; // keep the conversation going
     } catch (err) {
       if (!(err instanceof InputGuardrailTripwireTriggered)) throw err;

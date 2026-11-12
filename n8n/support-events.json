@@ -119,7 +119,7 @@
       "notes": "HTML parse mode with every model/user-influenced value escaped (& < >). See the refund node's note.",
       "parameters": {
         "chatId": "YOUR_CHAT_ID",
-        "text": "=🛡 <b>Defence layer {{ $json.body.layer }}</b> ({{ $json.body.engine }}): {{ ({1: 'jailbreak blocked', 2: 'prompt injection withheld', 3: 'refund rejected by a human', 4: 'refund over the 100 EUR limit'})[$json.body.layer] || 'fired' }}\nTool: {{ String($json.body.tool || '-').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;') }}{{ ($json.body.args || {}).orderId ? ', order ' + String($json.body.args.orderId).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;') : '' }}\n{{ String($json.body.detail ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;') }}",
+        "text": "=🛡 <b>Defence layer {{ $json.body.layer }}</b> ({{ $json.body.engine }}): {{ ({1: 'jailbreak blocked', 2: 'prompt injection withheld', 3: 'refund rejected by a human', 4: 'refund over the 100 EUR limit', 5: 'system prompt quote withheld'})[$json.body.layer] || 'fired' }}\nTool: {{ String($json.body.tool || '-').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;') }}{{ ($json.body.args || {}).orderId ? ', order ' + String($json.body.args.orderId).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;') : '' }}\n{{ String($json.body.detail ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;') }}",
         "additionalFields": { "appendAttribution": false, "parse_mode": "HTML" }
       }
     }

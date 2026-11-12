@@ -49,6 +49,10 @@ export function n8nEvent(ev: ChatEvent, engine: string, userText: string, args: 
   if (ev.type === 'blocked') {
     return { ...base, kind: 'defence', layer: 1, tool: null, args: null, detail: `${ev.reason}: ${userText}`.slice(0, 200) };
   }
+  if (ev.type === 'message' && ev.layer === 5) {
+    // never the reply itself: it was withheld because it quoted the system prompt
+    return { ...base, kind: 'defence', layer: 5, tool: null, args: null, detail: 'system prompt quote withheld' };
+  }
   if (ev.type !== 'tool_result') return null;
   const refunded = ev.name === 'issue_refund' && !ev.layer && /^Refunded /.test(ev.output); // server.ts success text
   if (!ev.layer && !refunded) return null;

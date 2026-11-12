@@ -84,9 +84,30 @@ export const WITHHELD =
   'injection). Tell the user this content was blocked.]';
 export const REJECTED = 'A human rejected this refund.';
 
-// ---- Layer 5: output guardrail (system prompt leak) -- T-015 stub, implemented in the green step ----
+// ---- Layer 5: output guardrail (system prompt leak), spec 005 ----------------------------------
 export const LEAK_BLOCKED = "I can't share my internal instructions. How can I help with your order?";
-export const leakOf = (reply: string): boolean => (void reply, false);
+const LEAK_WORDS = 8; // a reply sharing this many consecutive words with INSTRUCTIONS is a leak
+
+/** Lowercase words; punctuation, hyphens, bullets and newlines all count as word breaks. */
+const words = (s: string) => s.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean);
+const ngram = (w: string[], i: number) => w.slice(i, i + LEAK_WORDS).join(' ');
+const promptRuns = (() => {
+  const w = words(INSTRUCTIONS);
+  return new Set(w.slice(0, w.length - LEAK_WORDS + 1).map((_, i) => ngram(w, i)));
+})();
+
+/**
+ * True when the reply quotes the system prompt: 8+ consecutive words of INSTRUCTIONS. Pure, so it
+ * cannot fail open. ponytail: word-for-word only; a looser paraphrase passes (spec 005, out of scope).
+ */
+export const leakOf = (reply: string): boolean => {
+  const w = words(reply);
+  return w.some((_, i) => i + LEAK_WORDS <= w.length && promptRuns.has(ngram(w, i)));
+};
+
+/** The final reply as a ChatEvent; a leaking reply is replaced (layer 5). Both engines use it. */
+export const replyEvent = (text: string): ChatEvent =>
+  leakOf(text) ? { type: 'message', text: LEAK_BLOCKED, layer: 5 } : { type: 'message', text };
 
 export const injectionFilter = defineToolOutputGuardrail({
   name: 'injection_filter',
@@ -190,7 +211,7 @@ export async function createSdkEngine(model?: string | Model): Promise<Engine> {
           }
         }
         history = result.history;
-        yield { type: 'message', text: String(result.finalOutput ?? '') };
+        yield replyEvent(String(result.finalOutput ?? '')); // layer 5
       } catch (err) {
         if (!(err instanceof InputGuardrailTripwireTriggered)) throw err;
         yield { type: 'blocked', reason: String(err.result.output.outputInfo?.reason ?? 'attack') };

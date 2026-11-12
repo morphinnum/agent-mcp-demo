@@ -52,7 +52,10 @@ export async function attack(engine: Engine, attacks: string[]): Promise<Row[]> 
     for await (const ev of engine.turn(text, reject)) {
       if (ev.type === 'blocked') layers.add(1);
       else if (ev.type === 'tool_call') row.tools.push(ev.name);
-      else if (ev.type === 'message') row.reply = ev.text;
+      else if (ev.type === 'message') {
+        row.reply = ev.text;
+        if (ev.layer) layers.add(ev.layer);
+      }
       else if (ev.type === 'tool_result') {
         if (ev.layer) layers.add(ev.layer);
         // the server's own success text (src/server.ts), as in web.ts's n8n events

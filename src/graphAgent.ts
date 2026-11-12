@@ -17,7 +17,7 @@ import { ChatOpenAI } from '@langchain/openai';
 import { MCPAdapter } from '@langchain/mcp-adapters';
 import { z } from 'zod';
 import {
-  INJECTION, INSTRUCTIONS, REJECTED, SCREENER_INSTRUCTIONS, SERVER_COMMAND, WITHHELD, layerOf,
+  INJECTION, INSTRUCTIONS, REJECTED, SCREENER_INSTRUCTIONS, SERVER_COMMAND, WITHHELD, layerOf, replyEvent,
   type AskHuman, type ChatEvent, type Engine,
 } from './agent.ts';
 import { LLM_CONFIG, MODEL, checkLLM, createLLM } from './llm.ts';
@@ -99,7 +99,7 @@ export async function* runGraphTurn(graph: Graph, threadId: string, text: string
       for (const msg of update.agent?.messages ?? []) {
         const calls = toolCallsOf(msg);
         if (calls.length) for (const c of calls) yield { type: 'tool_call', name: c.name, args: c.args };
-        else yield { type: 'message', text: textOf(msg.content) };
+        else yield replyEvent(textOf(msg.content)); // layer 5
       }
       for (const msg of update.tools?.messages ?? []) {
         const output = textOf(msg.content);
