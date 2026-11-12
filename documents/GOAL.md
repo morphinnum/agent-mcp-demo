@@ -22,6 +22,7 @@ add CLAUDE.md, instructions and project skills, and track the work in documents.
 | LangGraph | The same agent as a LangGraph state graph, same MCP server, same 4 layers | [002](specs/002-langgraph-agent.md) |
 | Workflow | CLAUDE.md, `.claude/agents`, `.claude/skills`, `documents/` | [003](specs/003-claude-workflow.md) |
 | Automation | n8n workflow: refund and defence-layer events → Telegram + Data Table log | [004](specs/004-n8n-events.md) |
+| Layer 5 | Output guardrail in code: replies that quote the system prompt are withheld | [005](specs/005-output-guardrail.md) |
 
 ## Non-goals
 - Production auth, multi-user sessions, persistence across restarts.
