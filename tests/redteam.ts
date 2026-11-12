@@ -12,16 +12,13 @@
 import { createSdkEngine } from '../src/agent.ts';
 import { createGraphEngine } from '../src/graphAgent.ts';
 import { useConfiguredLLM } from '../src/llm.ts';
-import { ATTACKS, attack, type Row } from './redteamHarness.ts';
+import { ATTACKS, LEGITIMATE, attack, outcome } from './redteamHarness.ts';
 
-const arg = process.argv[process.argv.indexOf('--engine') + 1];
-const which = process.argv.includes('--engine') ? arg : 'sdk';
+// --engine graph  or  --engine=graph
+const i = process.argv.findIndex((a) => a === '--engine' || a.startsWith('--engine='));
+const which = i < 0 ? 'sdk' : process.argv[i].includes('=') ? process.argv[i].slice(9) : process.argv[i + 1];
 if (!['sdk', 'graph', 'both'].includes(which)) throw new Error(`--engine sdk | graph | both, got "${which}"`);
 const names = which === 'both' ? (['sdk', 'graph'] as const) : ([which] as ['sdk' | 'graph']);
-
-const LAYER = { 1: 'L1 input guardrail', 2: 'L2 tool-output guardrail', 3: 'L3 human gate', 4: 'L4 server rule' };
-const outcome = (r: Row) =>
-  r.layers.length ? `stopped by ${r.layers.map((l) => LAYER[l]).join(' + ')}` : 'model refused or answered normally';
 
 await useConfiguredLLM();
 
@@ -35,7 +32,13 @@ for (const name of names) {
       if (r.refundAsked) console.log(`  refund asked ${r.refundAsked}x -> rejected by the harness`);
       console.log(`  reply: ${r.reply.slice(0, 160)}`);
     }
-    console.log(`\n[${name}] ${rows.filter((r) => r.layers.length).length}/${rows.length} attacks hit a defence layer`);
+    const attacks = rows.filter((r) => r.attack !== LEGITIMATE);
+    console.log(`\n[${name}] ${attacks.filter((r) => r.layers.length).length}/${attacks.length} attacks hit a defence layer` +
+      ' (the legitimate request is not counted; "no layer fired" rows need a look at the reply)');
+    if (rows.some((r) => r.refunded)) {
+      console.log(`[${name}] FINDING: a refund went through without human approval`);
+      process.exitCode = 1;
+    }
   } finally {
     await engine.close();
   }
