@@ -2,7 +2,7 @@
 
 | Status | Spec | Depends on |
 | --- | --- | --- |
-| review | [001](../specs/001-web-chat.md) | — |
+| done | [001](../specs/001-web-chat.md) | — |
 
 ## Goal
 `layerOf` in `src/agent.ts` tags any tool output containing "need a human manager" as layer 4. The
@@ -14,7 +14,7 @@ refusal.
 - [x] A `search_kb` result containing the refund-policy article has no `layer` (both engines)
 - [x] An `issue_refund` refused by the server over the limit still has `layer: 4` (both engines)
 - [x] Layers 2 and 3 are unchanged; both engines still emit the same `ChatEvent`s
-- [ ] Offline tests, no LLM; security-reviewer approves (touches `src/`)
+- [x] Offline tests, no LLM; security-reviewer approves (touches `src/`)
 
 ## Notes
 - 2026-11-13: Found by the redteam run in T-010 (finding F-b): the role-play attack showed "stopped by L4" although `issue_refund` was never called.
@@ -25,3 +25,4 @@ refusal.
   - offline + review → `npm test`; security-reviewer after green
 - 2026-11-13: Red: section 7 failed with `actual: [ 4 ], expected: []` (the KB search was labelled layer 4).
 - 2026-11-13: Green: `layerOf(output, tool)`: layer 4 only when `tool === 'issue_refund'`; both callers pass the tool name. `npm test`: all suites passed (server, loop, 4 defences, LangGraph, red-team harness, web API); `npm run typecheck` clean. Review box left open for security-reviewer.
+- 2026-11-13: security-reviewer: APPROVE. layerOf only labels events (UI badge, n8n hook, red-team report); layer 4 is still enforced in src/server.ts; tool names match the ones the layer-3 gates use on both engines. Optional nit, not done: share the refusal text as a constant like REJECTED. Done.
