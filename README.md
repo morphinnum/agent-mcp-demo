@@ -221,7 +221,7 @@ idea ─/grill-me─► documents/specs ─/ticket─► documents/tickets ─/s
 In Claude Code: `/grill-me`, `/ticket T-009`, `/spec-test T-009`, `/agent-crew T-010`.
 Project skills and agents load when Claude Code starts in this folder.
 
-Recommended `.claude/settings.json` (add it yourself; Claude Code doesn't let an agent change its own permissions):
+Project permissions in [`.claude/settings.json`](.claude/settings.json) (shared with everyone who clones the repo):
 
 ```json
 {
