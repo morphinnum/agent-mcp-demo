@@ -88,8 +88,12 @@ export const REJECTED = 'A human rejected this refund.';
 export const LEAK_BLOCKED = "I can't share my internal instructions. How can I help with your order?";
 const LEAK_WORDS = 8; // a reply sharing this many consecutive words with INSTRUCTIONS is a leak
 
-/** Lowercase words; punctuation, hyphens, bullets and newlines all count as word breaks. */
-const words = (s: string) => s.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean);
+/**
+ * Lowercase words; punctuation, hyphens, bullets and newlines all count as word breaks. NFKC folds
+ * fullwidth letters; invisible format characters (zero-width spaces) are dropped first.
+ */
+const words = (s: string) =>
+  s.normalize('NFKC').replace(/\p{Cf}/gu, '').toLowerCase().split(/[^a-z0-9]+/).filter(Boolean);
 const ngram = (w: string[], i: number) => w.slice(i, i + LEAK_WORDS).join(' ');
 const promptRuns = (() => {
   const w = words(INSTRUCTIONS);
@@ -106,7 +110,7 @@ export const leakOf = (reply: string): boolean => {
 };
 
 /** The final reply as a ChatEvent; a leaking reply is replaced (layer 5). Both engines use it. */
-export const replyEvent = (text: string): ChatEvent =>
+export const replyEvent = (text: string): Extract<ChatEvent, { type: 'message' }> =>
   leakOf(text) ? { type: 'message', text: LEAK_BLOCKED, layer: 5 } : { type: 'message', text };
 
 export const injectionFilter = defineToolOutputGuardrail({

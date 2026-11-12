@@ -27,7 +27,7 @@ try {
     if (!text || ['exit', 'quit'].includes(text.toLowerCase())) break;
     try {
       const result = await run(agent, [...history, user(text)], { maxTurns: 10 });
-      const reply = replyEvent(String(result.finalOutput ?? '')) as { text: string; layer?: 5 }; // layer 5
+      const reply = replyEvent(String(result.finalOutput ?? '')); // layer 5
       console.log(`agent> ${reply.text}${reply.layer ? '   [withheld by layer 5: output guardrail]' : ''}`);
       history = result.history; // keep the conversation going
     } catch (err) {

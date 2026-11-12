@@ -29,7 +29,7 @@ and `/client` 2.4 (MCP TypeScript SDK v2), `@langchain/langgraph` 1.7, `@langcha
 | `tests/testServer.ts` | An MCP client connects over stdio and calls each tool | No |
 | `tests/testLoop.ts` | The hand-written loop with a scripted fake LLM | No |
 | `tests/testDefences.ts` | A scripted "compromised model" attacks; the defences still hold | No |
-| `tests/testGraph.ts` | The LangGraph agent attacked by a scripted model; all 4 layers hold | No |
+| `tests/testGraph.ts` | The LangGraph agent attacked by a scripted model; all layers hold | No |
 | `tests/testWeb.ts` | The web API over real HTTP with both engines; approvals round-trip | No |
 | `tests/redteam.ts` | Live eval: attack prompts against the real model | Yes (free local) |
 | `n8n/support-events.json` | n8n workflow: defence-layer and refund events → Telegram + Data Table ([Demo: n8n](#demo-n8n)) | No (needs n8n) |
@@ -153,7 +153,7 @@ model wrote. A reason of `<b>x</b>` shows up literally, not in bold.
 - The model only *asks* about a refund: answer "yes" so it calls `issue_refund`. n8n hears about a
   refund only once the tool has run.
 
-## The four defence layers
+## The five defence layers
 
 | Layer | Agents SDK (`agent.ts`) | LangGraph (`graphAgent.ts`) | Stops |
 | --- | --- | --- | --- |
@@ -161,9 +161,17 @@ model wrote. A reason of `<b>x</b>` shows up literally, not in bold.
 | 2. Tool-output guardrail | Tool-output guardrail on every MCP result | Check inside the `tools` node | Indirect prompt injection hidden in data |
 | 3. Human approval | Tool-input guardrail asks a human before `issue_refund` | `approve` node pauses the graph with `interrupt()` | Any refund nobody signed off |
 | 4. Server-side rules | `server.ts`, inside `issue_refund` | same server | Refunds over 100 EUR, whatever the model or human says |
+| 5. Output guardrail | `replyEvent()` in `agent.ts`, on the final reply | the same `replyEvent()` on each reply message | Replies that quote 8+ consecutive words of the system prompt ([spec 005](documents/specs/005-output-guardrail.md)) |
 
 Prompts are not a security boundary. Layers 1 and 2 reduce risk; layers 3 and 4 are
 enforced in code, so they still hold when the model is tricked.
+
+**Layer 5 matches words, not meaning.** It catches a reply that quotes the prompt, also with changed
+case, punctuation, bullets, fullwidth letters or zero-width characters. It does **not** catch a
+paraphrase that shares fewer than 8 words in a row, a translation, look-alike letters (Cyrillic `о`),
+spelled-out or encoded text, a quote spread over several turns, or the prompt put into tool-call
+arguments. Found by the red team (T-010), fixed for the observed leaks (T-015); the rest is a stated
+limit. The prompt holds no secrets: the money is protected by layers 3 and 4, not by the prompt.
 
 A small local model makes this visible: it misjudges more often than a frontier model, so you
 may see the screener miss an attack or the agent call the wrong tool. Layers 3 and 4 still

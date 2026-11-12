@@ -1,6 +1,6 @@
 # agent-mcp-demo
 
-Exam demo: a customer-support agent on an MCP server, with 4 jailbreak-defence layers, built in
+Exam demo: a customer-support agent on an MCP server, with 5 jailbreak-defence layers (layer 5: output guardrail, `replyEvent` in `src/agent.ts`), built in
 two frameworks (OpenAI Agents SDK, LangGraph) and a React + Tailwind chat. TypeScript, Node 20.6+.
 The default LLM is free and local (Ollama, `qwen2.5:7b`), configured in `src/llm.ts`.
 
